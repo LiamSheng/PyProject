@@ -1,2 +1,2 @@
 # PyProject
- Class Project - Weather Processing App
+ Python learning & practice documentation, and familiarity with git code management techniques.
