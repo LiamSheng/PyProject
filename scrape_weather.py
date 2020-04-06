@@ -3,7 +3,9 @@ Create a scrape_weather.py module with a
 WeatherScraper class inside.
 """
 import datetime
+import urllib.request
 from html.parser import HTMLParser
+from db_operations import DBOperations
 
 
 class WeatherScraper(HTMLParser):
@@ -11,6 +13,9 @@ class WeatherScraper(HTMLParser):
     Use the Python HTMLParser class to scrape Winnipeg weather data 
     (mean temperatures) from the Environment Canada website, 
     from the current date, as far back in time as is available.
+
+    WeatherScraper class has been created inside a scrape_weather module.
+    Code uses the Python HTMLParser class to parse the website html.
     """
 
     def __init__(self):
@@ -154,6 +159,9 @@ class WeatherScraper(HTMLParser):
     def handle_data(self, data):
         """
         Handld the data and return dictionary.
+
+        Code successfully scrapes the mean temperature and date,
+        and stores them in a data structure.
         """
         """
         One way could be a dictionary of dictionaries. For example:
@@ -166,10 +174,9 @@ class WeatherScraper(HTMLParser):
             """Year"""
             self.myCaptionMonth = self.myCaption[4]
             """Month"""
-            dict_month = {'January': '01', 'February': '02', 'March': '03',
-                          'April': '04', 'May': '05', 'June': '06',
-                          'July': '07', 'August': '08', 'September': '09',
-                          'October': '10', 'November': '11', 'December': '12'}
+            dict_month = {'jan': '01', 'feb': '02', 'mar': '03', 'apr': '04',
+                          'may': '05', 'jun': '06', 'jul': '07', 'aug': '08',
+                          'sep': '09', 'oct': '10', 'nov': '11', 'dec': '12'}
             s = self.myCaption[4].strip()[:3].lower()
             if str(self.url_month).zfill(2) == dict_month[s] and str(self.url_year) \
                     in self.myCaptionYear:
@@ -207,4 +214,32 @@ class WeatherScraper(HTMLParser):
         if self.inMyDate:
             self.dictOuter[self.myDate] = dict(self.dictInner)
 
-# w = WeatherScraper()
+
+# Code successfully scrapes weather data from
+# the current date, as far back in time as is available.
+
+# Code receives a url to scrape as input,
+# and outputs a data structure containing the scraped data.
+try:
+    wather_scraper = WeatherScraper()
+    now = datetime.datetime.now()
+    break_loop = False
+    for i in reversed(range(now.year)):
+        wather_scraper.url_year = i
+        if break_loop:
+            break
+        for j in range(0, 13):
+            wather_scraper.url_month = j
+            passedUrl = f"https://climate.weather.gc.ca/climate_data/daily_data_e.html?%20StationID=27174&timeframe=2&StartYear=1840&EndYear=2018&Day=%201&Year={wather_scraper.url_year}&Month={wather_scraper.url_month}#"
+            with urllib.request.urlopen(passedUrl) as response:
+                html = str(response.read())
+            wather_scraper.feed(html)
+            if wather_scraper.EqualData is False:
+                x_loop_must_break = True
+                break
+    print(f"inner{wather_scraper.dictInner}")
+    print(f"outer{wather_scraper.dictOuter}")
+    myOperations = DBOperations()
+    myOperations.process(wather_scraper.dictOuter)
+except Exception as e:
+    print("Error:", e)
